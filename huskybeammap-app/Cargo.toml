@@ -22,7 +22,7 @@ target_sdk_version = 36
 min_sdk_version = 18
 
 build_targets = [ "aarch64-linux-android" ]
-package_name = "edu.ucsb.huskybeammap"
+package_name = "edu.ucsb.huskybeammap-app"
 label = "Husky Beammap"
 version_code = 3
 version_name = "2.1"
