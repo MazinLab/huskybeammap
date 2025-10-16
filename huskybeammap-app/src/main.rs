@@ -38,6 +38,7 @@ async fn main() {
                         height: screen_height() as usize,
                         frame: f,
                         objects: objects.len(),
+                        frame_time: macroquad::time::get_frame_time(),
                     };
                     s.send(ewebsock::WsMessage::Text(facet_json::to_string(&resp)));
                 } else {

@@ -1,9 +1,10 @@
 [package]
-name = "huskybeammap"
+name = "huskybeammap-app"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+egui-macroquad = "0.17.3"
 ewebsock = "0.8.0"
 facet = "0.29.1"
 facet-json = "0.29.1"

@@ -27,6 +27,7 @@ pub struct StatusMessage {
     pub height: usize,
     pub frame: u64,
     pub objects: usize,
+    pub frame_time: f32,
 }
 
 impl Object {
