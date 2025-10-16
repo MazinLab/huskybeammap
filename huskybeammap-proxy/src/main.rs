@@ -28,8 +28,15 @@ fn main() {
             spawn(move || {
                 let lllp = llp.clone();
                 let s = stream.unwrap();
-                println!("Phone Connected From {:?}", s.peer_addr());
+                println!("Phone Connected From {:?}", s.peer_addr().unwrap());
                 let mut websocket = accept(s).unwrap();
+                websocket.send(Message::Text("[]".into())).unwrap();
+                if let Ok(Message::Text(t)) = websocket.read() {
+                    let s: StatusMessage = from_str(&t).unwrap();
+                    println!("{:#?}", s)
+                } else {
+                    return;
+                }
 
                 let id = Uuid::new_v4();
                 let (sstatus, rstatus): (Sender<StatusMessage>, _) = channel();
@@ -47,6 +54,12 @@ fn main() {
                         Message::Text(t) => {
                             let resp = from_str(t.as_str()).unwrap();
                             sstatus.send(resp).unwrap();
+                        }
+                        // TODO: Handle correctly
+                        Message::Close(_p) => return,
+                        Message::Ping(p) => {
+                            websocket.send(Message::Pong(p)).unwrap();
+                            continue;
                         }
                         _ => unreachable!(),
                     }
@@ -82,6 +95,12 @@ fn main() {
                         Message::Text(t) => {
                             let obj = from_str(t.as_str()).unwrap();
                             sobj.send(obj).unwrap();
+                        }
+                        // TODO: Handle correctly
+                        Message::Close(_p) => return,
+                        Message::Ping(p) => {
+                            websocket.send(Message::Pong(p)).unwrap();
+                            continue;
                         }
                         _ => unreachable!(),
                     }

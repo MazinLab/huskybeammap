@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 import time
 import json
+import sys
 
-from websockets.sync.server import serve
+from websockets.sync.client import connect
 
 
 def schedule(websocket):
     websocket.send("[]")
-    i = 0
     for message in websocket:
         print(message)
         packets = [
@@ -40,8 +40,8 @@ def schedule(websocket):
 
 
 def main():
-    with serve(schedule, "0.0.0.0", 9001) as server:
-        server.serve_forever()
+    with connect(f"ws://{sys.argv[1]}:{sys.argv[2]}") as websocket:
+        schedule(websocket)
 
 
 if __name__ == "__main__":

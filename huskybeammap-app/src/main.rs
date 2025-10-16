@@ -1,3 +1,5 @@
+use egui_macroquad::egui;
+use ewebsock::WsEvent;
 use huskybeammap_types::*;
 use macroquad::prelude::*;
 
@@ -18,18 +20,22 @@ async fn main() {
     //TODO: getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
     let mut objects = vec![];
+    let mut disconnected = true;
+    let mut context = "Have not yet recieved any messages".into();
+    let mut ws_addr: String = "ws://192.168.42.144:9001".into();
+    let mut res = ewebsock::connect(ws_addr.clone(), Default::default());
 
-    let mut res = ewebsock::connect("ws://192.168.42.144:9001", Default::default());
     if let Err(e) = &res {
-        error!("Couldn't connect to websocket {:#?}", e)
+        error!("Couldn't connect to websocket {:#?}", e);
+        disconnected = true;
+        context = e.clone();
     }
 
     loop {
-        if let Ok((s, r)) = &mut res {
-            if let Some(event) = r.try_recv() {
-                if let ewebsock::WsEvent::Message(ewebsock::WsMessage::Text(jsdata)) = &event {
-                    trace!("Recieved Text: {}", jsdata);
-                    let data: Vec<Object> = facet_json::from_str(jsdata).unwrap();
+        match &mut res {
+            Ok((s, r)) => match r.try_recv() {
+                Some(WsEvent::Message(ewebsock::WsMessage::Text(jsdata))) => {
+                    let data: Vec<Object> = facet_json::from_str(&jsdata).unwrap();
                     for obj in data.into_iter() {
                         objects.push(obj)
                     }
@@ -39,12 +45,46 @@ async fn main() {
                         frame: f,
                         objects: objects.len(),
                         frame_time: macroquad::time::get_frame_time(),
+                        frame_rate: macroquad::time::get_fps() as u32,
                     };
                     s.send(ewebsock::WsMessage::Text(facet_json::to_string(&resp)));
-                } else {
-                    error!("Recieved unknown message {:#?}", event);
+                    disconnected = false;
                 }
+                Some(WsEvent::Opened) => {
+                    disconnected = false;
+                }
+                Some(WsEvent::Error(str)) => {
+                    disconnected = true;
+                    context = str;
+                }
+                Some(WsEvent::Closed) => {
+                    disconnected = true;
+                    context = "Closed".into();
+                }
+                Some(e) => {
+                    error!("Unhandled event {:#?}", e);
+                }
+                None => {}
+            },
+            Err(e) => {
+                disconnected = true;
+                context = e.clone();
             }
+        }
+        if disconnected {
+            egui_macroquad::ui(|egui_ctx| {
+                egui::Window::new("Connect to server").show(egui_ctx, |ui| {
+                    ui.label(format!("Trouble connecting to server: {}", context));
+                    ui.text_edit_singleline(&mut ws_addr);
+                    if ui.button("Connect").clicked() {
+                        res = ewebsock::connect(ws_addr.clone(), Default::default());
+                    }
+                });
+            });
+
+            // Draw things before egui
+
+            egui_macroquad::draw();
         }
         objects = objects.into_iter().filter_map(|p| p.repack(f)).collect();
         for o in objects.iter() {
