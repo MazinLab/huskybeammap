@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1, fullscreen">
+        <link rel="manifest" href="./js/manifest.json" />
+        <link data-trunk rel="copy-file" href="./js/manifest.json">
+        <title>Husky Beammap</title>
+        <style>
+            html,
+            body,
+            canvas {
+                margin: 0px;
+                padding: 0px;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                position: absolute;
+                background: black;
+                z-index: 0;
+            }
+        </style>
+        <link data-trunk rel="rust" data-no-demangle data-wasm-no-import data-wasm-opt="z"/>
+    </head>
+
+    <body>
+        <canvas id="glcanvas" tabindex='1'></canvas>
+        <script data-trunk src="./js/mq_js_bundle.js"></script>
+        <!-- <script data-trunk src="./js/sapp_jsutils.js"></script> -->
+        <!-- <script data-trunk src="./js/quad-net.js"></script> -->
+        <script>load("huskybeammap_bg.wasm");</script>
+    </body>
+
+</html>
