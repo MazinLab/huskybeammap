@@ -12,6 +12,8 @@ use uuid::Uuid;
 
 /// Absolutely disgusting but it should work and not peg the CPU
 fn main() {
+    env_logger::init();
+
     let phone_server = TcpListener::bind("0.0.0.0:9001").unwrap();
     let proxy_server = TcpListener::bind("0.0.0.0:9002").unwrap();
 
@@ -28,17 +30,18 @@ fn main() {
             spawn(move || {
                 let lllp = llp.clone();
                 let s = stream.unwrap();
-                println!("Phone Connected From {:?}", s.peer_addr().unwrap());
+                log::info!("Phone Connected From {:?}", s.peer_addr().unwrap());
                 let mut websocket = accept(s).unwrap();
                 websocket.send(Message::Text("[]".into())).unwrap();
                 if let Ok(Message::Text(t)) = websocket.read() {
                     let s: StatusMessage = from_str(&t).unwrap();
-                    println!("{:#?}", s)
+                    log::info!("Phone Status: {:#?}", s)
                 } else {
                     return;
                 }
 
                 let id = Uuid::new_v4();
+                log::info!("Phone assigned ID: {}", id);
                 let (sstatus, rstatus): (Sender<StatusMessage>, _) = channel();
                 let (sobj, robj): (Sender<Vec<Object>>, _) = channel();
                 {
@@ -80,7 +83,7 @@ fn main() {
                 let lllc = llc.clone();
                 let llln = lln.clone();
                 let s = stream.unwrap();
-                println!("Client Connected From {:?}", s.peer_addr());
+                log::info!("Client Connected From {:?}", s.peer_addr().unwrap());
                 let mut websocket = accept(s).unwrap();
 
                 let id = Uuid::new_v4();
@@ -90,10 +93,12 @@ fn main() {
                     let mut cs = lllc.lock().unwrap();
                     cs.insert(id, (sstatus, robj));
                 }
+                log::info!("Client assigned ID: {}", id);
                 loop {
                     match websocket.read().unwrap() {
                         Message::Text(t) => {
                             let obj = from_str(t.as_str()).unwrap();
+                            log::trace!("Recieved objects from {}: {:#?}", id, obj);
                             sobj.send(obj).unwrap();
                         }
                         // TODO: Handle correctly
@@ -110,6 +115,7 @@ fn main() {
                         llln.1.notify_one();
                     }
                     let resp = rstatus.recv().unwrap();
+                    log::trace!("Replying with {:?} to {}", resp, id);
                     websocket
                         .send(Message::Text(to_string(&resp).into()))
                         .unwrap();

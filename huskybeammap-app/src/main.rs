@@ -82,8 +82,6 @@ async fn main() {
                 });
             });
 
-            // Draw things before egui
-
             egui_macroquad::draw();
         }
         objects = objects.into_iter().filter_map(|p| p.repack(f)).collect();

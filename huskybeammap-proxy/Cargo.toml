@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+env_logger = "0.11.8"
 facet = "0.29.1"
 facet-json = "0.29.1"
 huskybeammap-types = { version = "0.1.0", path = "../huskybeammap-types" }
+log = "0.4.28"
 tungstenite = "0.28.0"
 uuid = { version = "1.18.1", features = ["v4"] }
