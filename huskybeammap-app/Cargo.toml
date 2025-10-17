@@ -19,7 +19,7 @@ env_logger = "0.7"
 [package.metadata.android]
 android_version = 36
 target_sdk_version = 36
-min_sdk_version = 18
+min_sdk_version = 25
 
 build_targets = [ "aarch64-linux-android" ]
 package_name = "edu.ucsb.huskybeammap-app"
